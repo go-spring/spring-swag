@@ -141,8 +141,16 @@ func (o *Operation) Process() error {
 		if t.Kind() == reflect.Ptr {
 			t = t.Elem()
 		}
+		slice := false
+		if t.Kind() == reflect.Slice {
+			slice = true
+			t = t.Elem()
+		}
 		if t.Kind() == reflect.Struct {
 			schema := spec.RefSchema("#/definitions/" + t.Name())
+			if slice {
+				schema = spec.ArrayProperty(schema)
+			}
 			param := BodyParam("body", schema).
 				WithDescription(o.bindParam.description).
 				AsRequired()
@@ -197,6 +205,7 @@ func NewBindResponse(i interface{}, description string) *spec.Response {
 
 	if t.Kind() == reflect.Struct {
 		schema := spec.RefSchema("#/definitions/" + t.Name())
+
 		if slice {
 			resp.WithSchema(spec.ArrayProperty(schema))
 		} else {

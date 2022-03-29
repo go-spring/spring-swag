@@ -278,7 +278,7 @@ func (s *Swagger) BindDefinitionWithTags(i interface{}, attachFields map[string]
 				if et.Kind() == reflect.Ptr {
 					et = et.Elem()
 				}
-				
+
 				var items *spec.Schema
 				switch k := et.Kind(); k {
 				case reflect.Bool:
@@ -305,6 +305,8 @@ func (s *Swagger) BindDefinitionWithTags(i interface{}, attachFields map[string]
 
 				propSchema = spec.ArrayProperty(items)
 			}
+		case reflect.Interface:
+			propSchema = spec.ComposedSchema()
 		default:
 			panic(fmt.Errorf("unsupported swagger type %s", f.Type))
 		}
