@@ -253,14 +253,31 @@ func (s *Swagger) BindDefinitionWithTags(i interface{}, attachFields map[string]
 				panic(fmt.Errorf("unsupported swagger type %s", f.Type))
 			}
 		case reflect.Ptr:
-			if et := f.Type.Elem(); et.Kind() == reflect.Struct {
+			et := f.Type.Elem()
+			switch et.Kind() {
+			case reflect.Bool:
+				propSchema = spec.BoolProperty()
+			case reflect.Int8:
+				propSchema = spec.Int8Property()
+			case reflect.Int16:
+				propSchema = spec.Int16Property()
+			case reflect.Int32:
+				propSchema = spec.Int32Property()
+			case reflect.Int64:
+				propSchema = spec.Int64Property()
+			case reflect.String:
+				propSchema = spec.StringProperty()
+			case reflect.Struct:
 				propSchema = spec.RefSchema("#/definitions/" + et.Name())
-			} else {
+			default:
 				panic(fmt.Errorf("unsupported swagger type %s", f.Type))
 			}
 		case reflect.Slice:
 			{
 				et := f.Type.Elem()
+				if et.Kind() == reflect.Ptr {
+					et = et.Elem()
+				}
 
 				var items *spec.Schema
 				switch k := et.Kind(); k {
@@ -288,6 +305,8 @@ func (s *Swagger) BindDefinitionWithTags(i interface{}, attachFields map[string]
 
 				propSchema = spec.ArrayProperty(items)
 			}
+		case reflect.Interface:
+			propSchema = spec.ComposedSchema()
 		default:
 			panic(fmt.Errorf("unsupported swagger type %s", f.Type))
 		}
